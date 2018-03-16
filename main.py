@@ -69,7 +69,9 @@ def main():
     body = ""
     for i in table_list:
         filename = i.split("/data/in/tables/")[1]
-        table = filename.split(".").pop()
+        filename_split = filename.split(".")
+        ext = filename_split.pop()
+        table = filename_split.pop()
         logging.info("Inputting: {0}".format(filename))
         #with open(i, mode="rt") as in_file:
         with open(i, mode="rt", encoding="utf-8") as in_file:
