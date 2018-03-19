@@ -41,10 +41,6 @@ cfg = docker.Config('/data/')
 in_tables = cfg.get_input_tables()
 logging.info("IN tables mapped: "+str(in_tables))
 
-### destination to fetch and output files
-DEFAULT_FILE_INPUT = "/data/in/tables/"
-
-
 def get_tables(in_tables):
     """
     Evaluate input table names.
@@ -61,6 +57,17 @@ def get_tables(in_tables):
     
     return input_list
 
+def upload(dataset_id, table, body, token):
+    h = httplib2.Http(".cache")
+    logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows  (" + len(body) + " bytes)")
+    (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows",
+                    "POST", 
+                    body = "{\"rows\":[" + body + "]}",
+                    headers = {
+                        "content-type": "application/json",
+                        "Authorization": "Bearer " + token
+                    })
+
 def main():
     """
     Main execution script.
@@ -68,18 +75,16 @@ def main():
     table_list = get_tables(in_tables)
     for i in table_list:
         filename = i.split("/data/in/tables/")[1]
-        schema = filename.split(".").pop().split("--")
-        table = filename
-        body = ""
-        if (len(schema) > 1):
-            table = "--".join(schema[1:])
-        logging.info("Inputting: {0}".format(filename))
+        filename_split = filename.split(".")
+        ext = filename_split.pop()
+        table = filename_split.pop()
+        logging.info("Processing Table: {0}".format(table))
         #with open(i, mode="rt") as in_file:
         with open(i, mode="rt", encoding="utf-8") as in_file:
             rowNum = 0
+            body = ""
             lazy_lines = (line.replace("\0", "") for line in in_file)
             reader = csv.DictReader(lazy_lines, lineterminator="\n")
-            logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + params["dataset_id"] + "/tables/" + table + "/rows")
             for row in reader:
                 if (len(body)):
                     body += ","
@@ -95,16 +100,6 @@ def main():
                 upload(params["dataset_id"], table, body, params["token"])
 
     return
-
-def upload(dataset_id, table, body, token):
-    h = httplib2.Http(".cache")
-    (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows",
-                    "POST", 
-                    body = "{\"rows\":[" + body + "]}",
-                    headers = {
-                        "content-type": "application/json",
-                        "Authorization": "Bearer " + token
-                    })
 
 if __name__ == "__main__":
 
