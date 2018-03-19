@@ -57,6 +57,16 @@ def get_tables(in_tables):
     
     return input_list
 
+def truncate(dataset_id, table, token):
+    h = httplib2.Http(".cache")
+    logging.info("Truncate: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows")
+    (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows",
+                    "DELETE", 
+                    headers = {
+                        "content-type": "application/json",
+                        "Authorization": "Bearer " + token
+                    })
+
 def upload(dataset_id, table, body, token):
     h = httplib2.Http(".cache")
     logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows  (" + str(len(body)) + " bytes)")
@@ -85,6 +95,9 @@ def main():
             body = ""
             lazy_lines = (line.replace("\0", "") for line in in_file)
             reader = csv.DictReader(lazy_lines, lineterminator="\n")
+            #truncate the table first
+            truncate(params["dataset_id"], table, params["token"])
+            #batch add data back in
             for row in reader:
                 if (len(body)):
                     body += ","
