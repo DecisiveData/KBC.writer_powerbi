@@ -59,7 +59,7 @@ def get_tables(in_tables):
 
 def upload(dataset_id, table, body, token):
     h = httplib2.Http(".cache")
-    logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows  (" + len(body) + " bytes)")
+    logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows  (" + str(len(body)) + " bytes)")
     (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows",
                     "POST", 
                     body = "{\"rows\":[" + body + "]}",
