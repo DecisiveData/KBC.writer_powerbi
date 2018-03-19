@@ -66,35 +66,45 @@ def main():
     Main execution script.
     """
     table_list = get_tables(in_tables)
-    body = ""
     for i in table_list:
         filename = i.split("/data/in/tables/")[1]
         schema = filename.split(".").pop().split("--")
         table = filename
+        body = ""
         if (len(schema) > 1):
             table = "--".join(schema[1:])
         logging.info("Inputting: {0}".format(filename))
         #with open(i, mode="rt") as in_file:
         with open(i, mode="rt", encoding="utf-8") as in_file:
+            rowNum = 0
             lazy_lines = (line.replace("\0", "") for line in in_file)
             reader = csv.DictReader(lazy_lines, lineterminator="\n")
-            logging.info("Outputting: {0}".format(filename))
+            logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + params["dataset_id"] + "/tables/" + table + "/rows")
             for row in reader:
                 if (len(body)):
                     body += ","
                 body += json.dumps(row)
-        h = httplib2.Http(".cache")
-        #upload to powerbi!
-        logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + params["dataset_id"] + "/tables/" + table + "/rows")
-        (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + params["dataset_id"] + "/tables/" + table + "/rows",
-                        "POST", 
-                        body = "{\"rows\":[" + body + "]}",
-                        headers = {
-                            "content-type": "application/json",
-                            "Authorization": "Bearer " + params["token"]
-                        })
+                rowNum += 1
+                #upload in batches of 10k as per pbi api limits
+                if (rowNum == 9999):
+                    upload(params["dataset_id"], table, body, params["token"])
+                    rowNum = 0
+                    body = ""
+            #upload remaining data
+            if (len(body)):
+                upload(params["dataset_id"], table, body, params["token"])
+
     return
 
+def upload(dataset_id, table, body, token):
+    h = httplib2.Http(".cache")
+    (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows",
+                    "POST", 
+                    body = "{\"rows\":[" + body + "]}",
+                    headers = {
+                        "content-type": "application/json",
+                        "Authorization": "Bearer " + token
+                    })
 
 if __name__ == "__main__":
 
