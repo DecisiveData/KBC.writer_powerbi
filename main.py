@@ -71,7 +71,6 @@ def truncate(workspace_id, dataset_id, table, token):
                         "content-type": "application/json",
                         "Authorization": "Bearer " + token
                     })
-    logging.info(json.dumps(resp))
     if resp["status"] != "200":
         raise Exception('Error truncating table: ' + table + "\n\n" + str(content))
 
@@ -90,7 +89,6 @@ def upload(workspace_id, dataset_id, table, body, token):
                         "content-type": "application/json",
                         "Authorization": "Bearer " + token
                     })
-    logging.info(json.dumps(resp))
     if resp["status"] != "200":
         raise Exception('Error uploading data into table: ' + table + "\n\n" + str(content))
 
@@ -98,6 +96,9 @@ def main():
     """
     Main execution script.
     """
+    batchSize = 9999
+    if params["batchSize"]:
+        batchSize = int(params["batchSize"])
     table_list = get_tables(in_tables)
     for i in table_list:
         filename = i.split("/data/in/tables/")[1]
@@ -112,20 +113,21 @@ def main():
             lazy_lines = (line.replace("\0", "") for line in in_file)
             reader = csv.DictReader(lazy_lines, lineterminator="\n")
             #truncate the table first
-            truncate(params["workspace_id"], params["dataset_id"], table, params["token"])
+            if params["truncate"]:
+                truncate(params["workspace_id"], params["dataset_id"], table, params["token"])
             #batch add data back in
             for row in reader:
-                if (len(body)):
+                if len(body) > 0:
                     body += ","
                 body += json.dumps(row)
                 rowNum += 1
                 #upload in batches of 10k as per pbi api limits
-                if (rowNum == 9999):
+                if rowNum == batchSize:
                     upload(params["workspace_id"], params["dataset_id"], table, body, params["token"])
                     rowNum = 0
                     body = ""
             #upload remaining data
-            if (len(body)):
+            if len(body) > 0:
                 upload(params["workspace_id"], params["dataset_id"], table, body, params["token"])
 
     return
