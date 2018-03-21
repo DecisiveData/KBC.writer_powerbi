@@ -60,7 +60,7 @@ def get_tables(in_tables):
 def truncate(workspace_id, dataset_id, table, token):
     #gen url
     url = "https://api.powerbi.com/v1.0/myorg"
-    if (workspace_id):
+    if workspace_id:
         url += "/groups/" + workspace_id
     #run truncate
     h = httplib2.Http(".cache")
@@ -72,13 +72,13 @@ def truncate(workspace_id, dataset_id, table, token):
                         "Authorization": "Bearer " + token
                     })
     logging.info(json.dumps(resp))
-    if (resp["status"] !== "200"):
+    if resp["status"] != "200":
         raise Exception('Error truncating table: ' + table + "\n\n" + str(content))
 
 def upload(workspace_id, dataset_id, table, body, token):
     #gen url
     url = "https://api.powerbi.com/v1.0/myorg"
-    if (workspace_id):
+    if workspace_id:
         url += "/groups/" + workspace_id
     #run upload
     h = httplib2.Http(".cache")
@@ -91,7 +91,7 @@ def upload(workspace_id, dataset_id, table, body, token):
                         "Authorization": "Bearer " + token
                     })
     logging.info(json.dumps(resp))
-    if (resp["status"] !== "200"):
+    if resp["status"] != "200":
         raise Exception('Error uploading data into table: ' + table + "\n\n" + str(content))
 
 def main():
