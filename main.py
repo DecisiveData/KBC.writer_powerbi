@@ -71,6 +71,8 @@ def truncate(workspace_id, dataset_id, table, token):
                         "content-type": "application/json",
                         "Authorization": "Bearer " + token
                     })
+    logging.info(json.dumps(resp))
+    logging.info(json.dumps(content))
 
 def upload(workspace_id, dataset_id, table, body, token):
     #gen url
@@ -87,6 +89,8 @@ def upload(workspace_id, dataset_id, table, body, token):
                         "content-type": "application/json",
                         "Authorization": "Bearer " + token
                     })
+    logging.info(json.dumps(resp))
+    logging.info(json.dumps(content))
 
 def main():
     """
