@@ -72,7 +72,8 @@ def truncate(workspace_id, dataset_id, table, token):
                         "Authorization": "Bearer " + token
                     })
     logging.info(json.dumps(resp))
-    logging.info(json.dumps(content))
+    if (resp["status"] !== "200"):
+        raise Exception('Error truncating table: ' + table + "\n\n" + str(content))
 
 def upload(workspace_id, dataset_id, table, body, token):
     #gen url
@@ -90,7 +91,8 @@ def upload(workspace_id, dataset_id, table, body, token):
                         "Authorization": "Bearer " + token
                     })
     logging.info(json.dumps(resp))
-    logging.info(json.dumps(content))
+    if (resp["status"] !== "200"):
+        raise Exception('Error uploading data into table: ' + table + "\n\n" + str(content))
 
 def main():
     """
