@@ -57,20 +57,30 @@ def get_tables(in_tables):
     
     return input_list
 
-def truncate(dataset_id, table, token):
+def truncate(workspace_id, dataset_id, table, token):
+    #gen url
+    url = "https://api.powerbi.com/v1.0/myorg"
+    if (workspace_id):
+        url += "/groups/" + workspace_id
+    #run truncate
     h = httplib2.Http(".cache")
-    logging.info("Truncate: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows")
-    (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows",
+    logging.info("Truncate: " + url + "/datasets/" + dataset_id + "/tables/" + table + "/rows")
+    (resp, content) = h.request(url + "/datasets/" + dataset_id + "/tables/" + table + "/rows",
                     "DELETE", 
                     headers = {
                         "content-type": "application/json",
                         "Authorization": "Bearer " + token
                     })
 
-def upload(dataset_id, table, body, token):
+def upload(workspace_id, dataset_id, table, body, token):
+    #gen url
+    url = "https://api.powerbi.com/v1.0/myorg"
+    if (workspace_id):
+        url += "/groups/" + workspace_id
+    #run upload
     h = httplib2.Http(".cache")
-    logging.info("Uploading: " + "https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows  (" + str(len(body)) + " bytes)")
-    (resp, content) = h.request("https://api.powerbi.com/v1.0/myorg/datasets/" + dataset_id + "/tables/" + table + "/rows",
+    logging.info("Uploading: " + url + "/datasets/" + dataset_id + "/tables/" + table + "/rows  (" + str(len(body)) + " bytes)")
+    (resp, content) = h.request(url + "/datasets/" + dataset_id + "/tables/" + table + "/rows",
                     "POST", 
                     body = "{\"rows\":[" + body + "]}",
                     headers = {
@@ -96,7 +106,7 @@ def main():
             lazy_lines = (line.replace("\0", "") for line in in_file)
             reader = csv.DictReader(lazy_lines, lineterminator="\n")
             #truncate the table first
-            truncate(params["dataset_id"], table, params["token"])
+            truncate(params["workspace_id"], params["dataset_id"], table, params["token"])
             #batch add data back in
             for row in reader:
                 if (len(body)):
@@ -105,12 +115,12 @@ def main():
                 rowNum += 1
                 #upload in batches of 10k as per pbi api limits
                 if (rowNum == 9999):
-                    upload(params["dataset_id"], table, body, params["token"])
+                    upload(params["workspace_id"], params["dataset_id"], table, body, params["token"])
                     rowNum = 0
                     body = ""
             #upload remaining data
             if (len(body)):
-                upload(params["dataset_id"], table, body, params["token"])
+                upload(params["workspace_id"], params["dataset_id"], table, body, params["token"])
 
     return
 
