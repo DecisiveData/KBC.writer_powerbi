@@ -119,6 +119,10 @@ def main():
             for row in reader:
                 if len(body) > 0:
                     body += ","
+                #truncate any values that are > 4000 chars
+                for key in row:
+                    if len(str(row[key])) > 4000:
+                        row[key] = str(row[key])[0:4000]
                 body += json.dumps(row)
                 rowNum += 1
                 #upload in batches of 10k as per pbi api limits
